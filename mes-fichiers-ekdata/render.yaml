@@ -1,7 +1,7 @@
 services:
   - type: web
     name: mes-fichiers-ekdata
-    env: native
+    env: java
     region: frankfurt
     plan: free
     buildCommand: "./mvnw clean package -DskipTests"
