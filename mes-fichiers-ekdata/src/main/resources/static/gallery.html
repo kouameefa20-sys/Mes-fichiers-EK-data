@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mes ficher EK data - Galerie & Aperçus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
+
+    <!-- En-tête avec Navigation -->
+    <header class="w-full max-w-4xl text-center py-6">
+        <h1 class="text-3xl font-extrabold tracking-wider text-cyan-400">📁 mes ficher EK data</h1>
+        <p class="text-sm text-slate-400 mt-1">Galerie des fichiers avec aperçus intelligents</p>
+        
+        <nav class="flex justify-center gap-4 mt-6">
+            <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-700 transition">📤 Envoyer</a>
+            <a href="gallery.html" class="bg-cyan-500 text-slate-950 font-semibold px-4 py-2 rounded-xl text-sm shadow">📂 Voir les fichiers & Aperçus</a>
+        </nav>
+    </header>
+
+    <!-- Grille des Fichiers -->
+    <main class="w-full max-w-4xl bg-slate-800 rounded-2xl shadow-2xl p-6 border border-slate-700 mb-6">
+        <h2 class="text-lg font-semibold mb-4 text-slate-200 border-b border-slate-700 pb-2">Fichiers stockés sur le serveur</h2>
+        
+        <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <p class="text-sm text-slate-500 italic col-span-full text-center py-8">Chargement de la galerie...</p>
+        </div>
+    </main>
+
+    <footer class="text-xs text-slate-500 py-4">&copy; 2026 - mes ficher EK data</footer>
+
+    <script>
+        // Fonction pour déterminer le type d'aperçu selon l'extension
+        function getFilePreview(filename) {
+            let ext = filename.split('.').pop().toLowerCase();
+            let fileUrl = `/api/files/${encodeURIComponent(filename)}`;
+
+            // 1. Si c'est une image -> Vrai aperçu miniature
+            if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) {
+                return `
+                    <div class="h-32 w-full bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center border border-slate-700 mb-3">
+                        <img src="${fileUrl}" class="object-cover h-full w-full" alt="${filename}">
+                    </div>
+                `;
+            }
+
+            // 2. Si c'est une vidéo -> Miniature vidéo ou icône
+            if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+                return `
+                    <div class="h-32 w-full bg-slate-950 rounded-lg flex flex-col items-center justify-center border border-slate-700 mb-3 text-purple-400">
+                        <svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <span class="text-xs uppercase font-bold tracking-wider">${ext}</span>
+                    </div>
+                `;
+            }
+
+            // 3. Autres types (PDF, Code, Archives, Audio, etc.)
+            let badgeColor = "text-cyan-400 border-cyan-500/30 bg-cyan-500/10";
+            let label = ext.toUpperCase();
+
+            if (ext === 'pdf') { badgeColor = "text-red-400 border-red-500/30 bg-red-500/10"; label = "PDF"; }
+            else if (['zip', 'rar', '7z', 'tar'].includes(ext)) { badgeColor = "text-amber-400 border-amber-500/30 bg-amber-500/10"; label = "ARCHIVE"; }
+            else if (['java', 'js', 'html', 'css', 'json', 'py'].includes(ext)) { badgeColor = "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"; label = "CODE"; }
+            else if (['mp3', 'wav', 'ogg'].includes(ext)) { badgeColor = "text-pink-400 border-pink-500/30 bg-pink-500/10"; label = "AUDIO"; }
+
+            return `
+                <div class="h-32 w-full bg-slate-950/60 rounded-lg flex flex-col items-center justify-center border border-slate-700/80 mb-3">
+                    <span class="px-3 py-1 rounded-full text-xs font-black border ${badgeColor}">${label}</span>
+                </div>
+            `;
+        }
+
+        async function fetchGallery() {
+            try {
+                let response = await fetch('/api/files');
+                let files = await response.json();
+                let grid = document.getElementById('fileGrid');
+                grid.innerHTML = '';
+                
+                if (files.length === 0) {
+                    grid.innerHTML = '<p class="text-sm text-slate-500 italic col-span-full text-center py-8">Aucun fichier dans le cloud pour le moment.</p>';
+                    return;
+                }
+
+                files.forEach(file => {
+                    let card = document.createElement('div');
+                    card.className = "bg-slate-900/80 p-4 rounded-xl border border-slate-700/60 flex flex-col justify-between hover:border-cyan-500/50 transition shadow-md";
+                    
+                    card.innerHTML = `
+                        <div>
+                            ${getFilePreview(file)}
+                            <h3 class="text-sm font-medium text-slate-200 truncate mb-3" title="${file}">${file}</h3>
+                        </div>
+                        <a href="/api/files/${encodeURIComponent(file)}" class="w-full text-center bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-cyan-400 text-xs font-bold py-2 rounded-lg transition" download>Télécharger</a>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Erreur chargement galerie", error);
+            }
+        }
+
+        fetchGallery();
+    </script>
+</body>
+</html>

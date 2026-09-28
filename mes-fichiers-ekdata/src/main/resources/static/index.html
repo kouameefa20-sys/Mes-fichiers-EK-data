@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mes ficher EK data - Envoyer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4">
+
+    <!-- En-tête avec Navigation -->
+    <header class="w-full max-w-xl text-center py-6">
+        <h1 class="text-3xl font-extrabold tracking-wider text-cyan-400">📁 mes ficher EK data</h1>
+        <p class="text-sm text-slate-400 mt-1">Envoyez vos fichiers en toute simplicité</p>
+        
+        <!-- Boutons de navigation -->
+        <nav class="flex justify-center gap-4 mt-6">
+            <a href="index.html" class="bg-cyan-500 text-slate-950 font-semibold px-4 py-2 rounded-xl text-sm shadow">📤 Envoyer</a>
+            <a href="gallery.html" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2 rounded-xl text-sm border border-slate-700 transition">📂 Voir les fichiers & Aperçus</a>
+        </nav>
+    </header>
+
+    <!-- Contenu Principal : Zone d'Upload -->
+    <main class="w-full max-w-xl bg-slate-800 rounded-2xl shadow-2xl p-6 border border-slate-700">
+        <div class="text-center py-6">
+            <label class="block text-base font-semibold mb-4 text-slate-200">Sélectionnez ou glissez votre fichier ici</label>
+            
+            <div class="border-2 border-dashed border-slate-600 hover:border-cyan-400 rounded-2xl p-8 transition bg-slate-900/40 flex flex-col items-center justify-center cursor-pointer relative">
+                <input type="file" id="fileInput" onchange="uploadFile()" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"/>
+                <svg class="w-12 h-12 text-cyan-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                <span class="text-sm text-slate-300 font-medium">Cliquez pour choisir un fichier</span>
+                <span class="text-xs text-slate-500 mt-1">Tous types de fichiers acceptés</span>
+            </div>
+            
+            <p id="uploadStatus" class="text-sm mt-4 font-semibold text-cyan-400"></p>
+        </div>
+    </main>
+
+    <footer class="text-xs text-slate-500 py-4">&copy; 2026 - mes ficher EK data</footer>
+
+    <script>
+        async function uploadFile() {
+            let input = document.getElementById('fileInput');
+            let status = document.getElementById('uploadStatus');
+            if (input.files.length === 0) return;
+
+            let formData = new FormData();
+            formData.append("file", input.files[0]);
+
+            status.textContent = "Envoi en cours vers le cloud...";
+
+            try {
+                let response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                let result = await response.text();
+                status.textContent = "✅ " + result;
+                input.value = "";
+            } catch (error) {
+                status.textContent = "❌ Erreur lors de l'envoi.";
+            }
+        }
+    </script>
+</body>
+</html>
